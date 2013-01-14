@@ -92,12 +92,12 @@ USAGE
         parser.add_argument("-s", "--kinship_type", dest="kinship_type", help="Type of kinship calculated. Possible types are ibs (default) or ibd ", choices=["ibs", "ibd"],default="ibs")
         parser.add_argument("-q", "--queue", dest="queue", help="Send status updates to Message Broker", action='store_true')
         parser.add_argument("-z", "--queue_host", dest="queue_host", help="Host of the Message Broker")
+        parser.add_argument("-o", "--output_file", dest="outputfile", help="Name of the output file")
         parser.add_argument('-V', '--version', action='version', version=program_version_message)
         parser.add_argument(dest="file", help="csv file containing phenotype values", metavar="FILE")
         
         # Process arguments
         args = parser.parse_args()
-        pdb.set_trace()
         messenger = StdoutMessenger()
         if args.queue: 
             messenger = ProgressMessenger(args.queue_host,5672,'admin','eastern')
@@ -110,7 +110,7 @@ USAGE
             phenotype_name = phenData.get_name(phen_id)
             messenger.update_status(progress=0.0, task_status='Loading phenotype data')
             print "Performing GWAS for phenotype: %s, phenotype_id: %s" % (phenotype_name, phen_id)
-            _perform_gwas_(phen_id, phenData, args.analysis_method, args.transformation,args.genotype,args.kinship_type,args.kinship,messenger)
+            _perform_gwas_(phen_id, phenData, args.analysis_method, args.transformation,args.genotype,args.kinship_type,args.kinship,messenger,args.outputfile)
         return 0
     except KeyboardInterrupt:
         ### handle keyboard interrupt ###
@@ -122,7 +122,7 @@ USAGE
         return 2
     
 
-def _perform_gwas_(phen_id,phenData,analysis_method,transformation,genotype,kinship_type,kinshipFile=None,messenger=None):
+def _perform_gwas_(phen_id,phenData,analysis_method,transformation,genotype,kinship_type,kinshipFile=None,messenger=None,outputfile=None):
     additional_columns = {}
     messenger.update_status(progress=0.0, task_status='Loading genotype data')
     genotypeData = dataParsers.load_snps_call_method(genotype)
@@ -174,7 +174,6 @@ def _perform_gwas_(phen_id,phenData,analysis_method,transformation,genotype,kins
     else:
         raise Exception('analysis method %s not supported' % analysis_method)
     
-    pdb.set_trace()
     pvals = res['ps']
     
     #Calculate Benjamini-Hochberg threshold
@@ -197,7 +196,8 @@ def _perform_gwas_(phen_id,phenData,analysis_method,transformation,genotype,kins
     
     #calculate ld
     pdb.set_trace()
-    outputfile = "%s.hdf5" % phen_id
+    if outputfile is None:
+         outputfile = "%s.hdf5" % phen_id
     messenger.update_status(progress=0.8, task_status='Processing and saving results')
     _save_hdf5_pval_file(outputfile, analysis_method, transformation,chromosomes, positions, scores, maf_dict['marfs'], maf_dict['mafs'], 
                          quantiles_dict,ks_res,bh_thres_d['thes_pval'],med_pval,additional_columns)
