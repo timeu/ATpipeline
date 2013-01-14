@@ -195,7 +195,6 @@ def _perform_gwas_(phen_id,phenData,analysis_method,transformation,genotype,kins
             additional_columns['beta1'] = betas[1]
     
     #calculate ld
-    pdb.set_trace()
     if outputfile is None:
          outputfile = "%s.hdf5" % phen_id
     messenger.update_status(progress=0.8, task_status='Processing and saving results')
@@ -247,7 +246,6 @@ def _save_hdf5_pval_file(outputfile,analysis_method,transformation,chromosomes,p
     pvals_group.attrs['bh_thres'] =-math.log10(bh_thresh)
     data = numpy.array(zip(chromosomes, positions, scores, mafs, macs,*additional_columns.values()))
     
-    pdb.set_trace()
     for chr in range(1,6):
         chr_group = pvals_group.create_group('chr%s' % chr)
         chr_data = data[numpy.where(data[:,0] == chr)]
