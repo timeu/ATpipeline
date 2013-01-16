@@ -131,7 +131,7 @@ def _perform_gwas_(phen_id,phenData,analysis_method,transformation,genotype,kins
     messenger.update_status(step=0.05, task_status='Preparing data')
     n_filtered_snps = _prepare_data_(genotypeData,phenData,phen_id)
     phen_vals = phenData.get_values(phen_id)
-    if analysis_method in ['emma', 'emmax', 'emmax_anova', 'emmax_step', 'loc_glob_mm']:
+    if analysis_method in ['emma', 'emmax', 'emmax_anova', 'emmax_step', 'loc_glob_mm','amm']:
         #Load genotype file (in binary format)
         sys.stdout.write("Retrieving the Kinship matrix K.\n")
         sys.stdout.flush()
@@ -166,11 +166,11 @@ def _perform_gwas_(phen_id,phenData,analysis_method,transformation,genotype,kins
     elif analysis_method in ['emmax','amm']:
         d = lm.emmax_step(phen_vals, genotypeData, K, [], emma_num=100)
         res = d['res']
-        additional_columns['stats'] = d['stats']
+        #additional_columns['stats'] = d['stats']
     elif analysis_method in ['lm']:
         d = lm.lin_reg_step(phen_vals, genotypeData, [])
         res = d['res']
-        additional_columns['stats'] = d['stats']
+        #additional_columns['stats'] = d['stats']
     else:
         raise Exception('analysis method %s not supported' % analysis_method)
     
@@ -186,13 +186,13 @@ def _perform_gwas_(phen_id,phenData,analysis_method,transformation,genotype,kins
     quantiles_dict = _calculate_qqplot_data_(pvals)
     scores = map(lambda x:-math.log10(x), pvals)
     
-    
     if analysis_method in ['lm', 'emma', 'emmax','amm']:
         additional_columns['genotype_var_perc'] = res['var_perc']
-        betas = map(list, zip(*res['betas']))
-        additional_columns['beta0'] = betas[0]
-        if len(betas) > 1:
-            additional_columns['beta1'] = betas[1]
+        if 'betas' in res:
+            betas = map(list, zip(*res['betas']))
+            additional_columns['beta0'] = betas[0]
+            if len(betas) > 1:
+                additional_columns['beta1'] = betas[1]
     
     #calculate ld
     if outputfile is None:
