@@ -86,7 +86,7 @@ USAGE
         parser = ArgumentParser(description=program_license, formatter_class=RawDescriptionHelpFormatter)
         parser.add_argument("-l", "--list_genotypes", dest="list_genotypes", help="display available genotype dataset", action='store_true')
         parser.add_argument("-t", "--transformation", dest="transformation", help="Apply a transformation to the data. Default[None]", choices=["log", "sqrt", "exp", "sqr", "arcsin_sqrt", "box_cox"])
-        parser.add_argument("-a", "--analysis_method", dest="analysis_method", help="analyis method to use",required=True,choices=["lm", "emma", "emmax", "kw", "ft", "emmax_anova", "lm_anova", "emmax_step", "lm_step","loc_glob_mm"])
+        parser.add_argument("-a", "--analysis_method", dest="analysis_method", help="analyis method to use",required=True,choices=["lm", "emma", "emmax", "kw", "ft", "emmax_anova", "lm_anova", "emmax_step", "lm_step","loc_glob_mm","amm"])
         parser.add_argument("-g", "--genotype", dest="genotype", help="genotype dataset to be used in the GWAS analysis (run with option -l to display list of available genotype datasets)", required=True, type=int,metavar="INTEGER" )
         parser.add_argument("-k", "--kinship", dest="kinship", help="Specify the file containing the kinship matrix. (otherwise default file is used or it's generated.)", metavar="FILE" )
         parser.add_argument("-s", "--kinship_type", dest="kinship_type", help="Type of kinship calculated. Possible types are ibs (default) or ibd ", choices=["ibs", "ibd"],default="ibs")
