@@ -234,6 +234,7 @@ def _save_hdf5_pval_file(outputfile,analysis_method,transformation,chromosomes,p
     
     #store pvalues
     pvals_group = f.create_group('pvalues')
+    pvals_group.attrs['numberOfSNPs'] = len(scores)
     pvals_group.attrs['max_score'] = max(scores)
     pvals_group.attrs['analysis_method'] = analysis_method
     if transformation == None:
