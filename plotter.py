@@ -20,13 +20,12 @@ It defines classes_and_methods
 import sys
 import os
 
-from argparse import ArgumentParser
-from argparse import RawDescriptionHelpFormatter
 import numpy
-import pdb
+import ipdb
 import tables
 import itertools
-
+import math
+import gwaResults
 __all__ = []
 __version__ = 0.1
 __date__ = '2012-12-06'
@@ -37,6 +36,8 @@ __updated__ = '2012-12-06'
 
 def main(argv=None):
     '''Command line options.'''
+    from argparse import ArgumentParser
+    from argparse import RawDescriptionHelpFormatter
 
     if argv is None:
         argv = sys.argv
@@ -68,12 +69,12 @@ USAGE
         parser.add_argument("-r", "--result", dest="result", help="result for which to plot [PHENOTYPE1/Fullset/raw/lm]",required=True)
         parser.add_argument("-o", "--output_folder", dest="outputfolder", help="Location where to output the plots")
         parser.add_argument('-V', '--version', action='version', version=program_version_message)
+        parser.add_argument('--png',dest='png',action='store_true',default=False)
+        parser.add_argument('--pdf',dest='pdf',action='store_true',default=False)
         parser.add_argument(dest="file", help="HDF5 GWAS result file", metavar="FILE")
         # Process arguments
         args = parser.parse_args()
-        if args.phenotypes != None:
-            phenotypes = args.phenotypes.split(",")
-        _plot_manhatten_charts(args.file,args.outputfolder,args.result)
+        _plot_gwas_result(args.file,args.outputfolder,args.result,args.png,args.pdf)
         return 0
     except KeyboardInterrupt:
         ### handle keyboard interrupt ###
@@ -85,10 +86,30 @@ USAGE
         return 2
 
 
-def _plot_gwas_result(hdf5_file,outputfolder,result):
-    data = _get_gwas_result(hdf5_file,result)
+def _plot_gwas_result(hdf5_file,outputfolder,result,png=True,pdf=False,mode='r',mac=15):
+    #ipdb.set_trace()
+    data,threshold = _get_gwas_result(hdf5_file,result,mode)
+    pdf_file = None
+    png_file = None
+    base_folder = './'
+    filename = result.replace('/','_')
+    if outputfolder is not None:
+        base_folder=outputfolder
+    image_file = ''
+    if png:
+        png_file = '%s/%s.png' % (base_folder,filename)
+        image_file = png_file
+    if pdf:
+        pdf_file= '%s/%s.pdf' % (base_folder,filename)
+        image_file= pdf_file
 
-def _sort_by_chr_pos_(data):
+    res = gwaResults.Result(chromosomes=data['chromosome'],positions=data['position'],scores=data['score'],mafs=data['maf'],macs=data['mac'])
+    res.filter_attr('macs',mac)
+    res.plot_manhattan(png_file=png_file,pdf_file=pdf_file, percentile=90, type="score",
+                            ylab="$-$log$_{10}(p)$", plot_bonferroni=True,b_threshold=-math.log10(threshold),
+                            neg_log_transform=False)
+    return image_file
+    #_plot_manhattan_chart(data,threshold=threshold,png_file=png_file,pdf_file=pdf_file)
 
 def _get_chromosome_ends(data,chr_list):
     sorted_ix = numpy.argsort(data,order=('chromosome','position'))
@@ -114,9 +135,9 @@ def _get_chromosome_splits(data,chr_list):
     chromosome_splits.append(len(data['chromosome'])-1)
     return chromosome_splits
 
-def _plot_manhattan_chart(data,b_threshold, percentile=80,highlight_markers = None,
-                          highlight_loci=None,plot_xaxis=False,chrom_col_map=None,
-                          markersize= 6,plot_bonferroni=True,threshold=None,pdf_file=None,png_file=None):
+def _plot_manhattan_chart(data,b_threshold=None, percentile=100,highlight_markers = None,
+                          highlight_loci=None,plot_xaxis=True,chrom_col_map=None,
+                          markersize= 6,max_score=None,min_score=None,plot_bonferroni=False,threshold=None,pdf_file=None,png_file=None):
     import matplotlib
     matplotlib.use('Agg')
     import matplotlib.pyplot as plt
@@ -254,6 +275,7 @@ def _plot_manhattan_chart(data,b_threshold, percentile=80,highlight_markers = No
             b_threshold = -math.log10(1.0 / (num_scores * 20.0))
         plt.plot([0, sum(chromosome_ends)], [b_threshold, b_threshold], color='#000000', linestyle="-.")
     if threshold :
+        threshold = -math.log10(threshold)
         plt.plot([0, sum(chromosome_ends)], [threshold, threshold], color='#6495ed', linestyle='-.')
 
 
@@ -262,7 +284,7 @@ def _plot_manhattan_chart(data,b_threshold, percentile=80,highlight_markers = No
     if plot_xaxis:
         plt.xticks(ticksList1, ticksList2, fontsize='x-small')
         #pdb.set_trace()
-    plt.ylabel('score')
+    plt.ylabel('$-$log$_{10}(p)$')
 
     if plot_xaxis:
         if len(chromosome_ends) == 23: #This is probably Human!
@@ -272,22 +294,26 @@ def _plot_manhattan_chart(data,b_threshold, percentile=80,highlight_markers = No
     else:
         plt.xlabel("bases")
 
-
+    image_file = ''
     if pdf_file:
         plt.savefig(pdf_file, format="pdf")
+        image_file = pdf_file
     if png_file:
         plt.savefig(png_file, format="png", dpi=300, bbox_inches='tight')
+        image_file = png_file
     if not (pdf_file or png_file):
         plt.show()
     plt.clf()
     plt.close()
+    return image_file
 
-def _get_gwas_result(hdf5_file,result):
-    f = tables.openFile('')
-    result_table = f.getNode('/phenotypes/%s/results' % result)
+def _get_gwas_result(hdf5_file,result,mode='r'):
+    f = tables.openFile(hdf5_file,mode)
+    result_table = f.getNode('/phenotypes/%s' % result)
     data =  result_table[:]
+    threshold = result_table._v_attrs['pval_threshold']
     f.close()
-    return data
+    return data,threshold
 
 
 if __name__ == "__main__":
