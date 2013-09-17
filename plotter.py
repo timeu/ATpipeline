@@ -92,7 +92,7 @@ def _plot_gwas_result(hdf5_file,outputfolder,result,png=True,pdf=False,mode='r',
     pdf_file = None
     png_file = None
     base_folder = './'
-    filename = result.replace('/','_')
+    filename = '%s_mac%s' % (result.replace('/','_'),int(mac))
     if outputfolder is not None:
         base_folder=outputfolder
     image_file = ''
