@@ -237,7 +237,7 @@ def _save_hdf5_pval_file(outputfile,analysis_method,transformation,chromosomes,p
     pvals_group.attrs['numberOfSNPs'] = len(scores)
     pvals_group.attrs['max_score'] = max(scores)
     pvals_group.attrs['analysis_method'] = analysis_method
-    if transformation == None:
+    if transformation is None:
         transformation = "raw"
     pvals_group.attrs['transformation'] = transformation
     pvals_group.attrs['bonferroni_threshold'] = -math.log10(0.05 / len(scores))

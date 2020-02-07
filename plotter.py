@@ -21,7 +21,6 @@ import sys
 import os
 
 import numpy
-import ipdb
 import tables
 import itertools
 import math
@@ -308,8 +307,8 @@ def _plot_manhattan_chart(data,b_threshold=None, percentile=100,highlight_marker
     return image_file
 
 def _get_gwas_result(hdf5_file,result,mode='r'):
-    f = tables.openFile(hdf5_file,mode)
-    result_table = f.getNode('/phenotypes/%s' % result)
+    f = tables.open_file(hdf5_file,mode)
+    result_table = f.get_node('/phenotypes/%s' % result)
     data =  result_table[:]
     threshold = result_table._v_attrs['pval_threshold']
     f.close()
